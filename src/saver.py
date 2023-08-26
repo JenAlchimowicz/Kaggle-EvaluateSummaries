@@ -9,14 +9,14 @@ import boto3
 import torch
 
 
-def save_to_s3(model, tokenizer, Config):
+def save_to_s3(model, tokenizer, cfg):
     # Save to disk
-    out_dir = f"outputs/{Config.experiment_name}/experiment_{random_string(6)}"
+    out_dir = f"outputs/{cfg.experiment_name}/experiment_{random_string(6)}"
     torch.save(model.hf_model_config, out_dir + "hf_model_config.pth")
     torch.save(model.state_dict(), out_dir + "weights.pth")
     tokenizer.save_pretrained(out_dir + "tokenizer/")
 
-    cfg_json = Config.to_json()
+    cfg_json = cfg.to_json()
     with Path.open(out_dir + "config.json", "w") as file:
         json.dump(cfg_json, file)
 
@@ -40,7 +40,7 @@ def save_to_s3(model, tokenizer, Config):
 
     # Upload to s3
     file_path = out_dir + "/model_bundle.zip"
-    key = f"model_bundle_{Config.experiment_name}.zip"
+    key = f"model_bundle_{cfg.experiment_name}.zip"
     upload_to_s3(file_path, key)
 
 
@@ -52,7 +52,5 @@ def random_string(length):
 def upload_to_s3(file_path, key, bucket: str = "kaggle-evaluate-summaries"):
     s3 = boto3.client(
         "s3",
-        aws_access_key_id="",
-        aws_secret_access_key="",
     )
     s3.upload_file(file_path, bucket, key)

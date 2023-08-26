@@ -2,19 +2,19 @@
 name = "Kaggle-EvaluateSummaries"
 version = "1"
 dependencies = [
-    "pandas",
-    "pyarrow",
     "torch",
-    "transformers",
+    "torchvision",
+    "transformers[sentencepiece]",
     "accelerate",
     "datasets",
+    "neptune",
+    "boto3",
+    "pandas",
+    "numpy",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "ipykernel",
-    "matplotlib",
-]
+dev = []
 
 
 [tool.ruff]

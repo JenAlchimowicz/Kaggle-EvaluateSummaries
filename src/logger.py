@@ -5,7 +5,6 @@ from typing import Dict
 
 import neptune
 import numpy as np
-from configs.config import Config
 
 
 def configure_logger(
@@ -34,16 +33,15 @@ def configure_logger(
 
 
 class Logger:
-    def __init__(self, cfg: Config, final_training: bool = False):
+    def __init__(self, cfg, final_training: bool = False):
         self.cfg = cfg
         self.epoch_metrics = {}
         self.fold_metrics = defaultdict(list)
         self.run_metrics = {}
-        self.logger = configure_logger(__name__, cfg.log_file_path)
+        # self.logger = configure_logger(__name__, cfg.log_file_path)
 
         self.run = neptune.init_run(
             project=self.cfg.neptune_project_name,
-            api_token=self.cfg.neptune_api_token,
         )
         self.run["final_training"] = final_training
 
@@ -65,7 +63,6 @@ class Logger:
             self.run_metrics[k] = np.mean(v)
 
         self.run["loss"] = self.run_metrics
-        self.run["cfg"] = self.cfg.to_dict()
         self.run.stop()
 
     def add_loss_at_step(self, fold: int, step: int, losses: Dict[str, float]):

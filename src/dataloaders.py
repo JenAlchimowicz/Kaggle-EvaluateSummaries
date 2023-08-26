@@ -1,6 +1,5 @@
 import pandas as pd
 import torch
-from configs.config import Config
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -21,7 +20,7 @@ def load_data():
 
 
 class TextDataset(Dataset):
-    def __init__(self, cfg: Config, df: pd.DataFrame, tokenizer, train: bool):
+    def __init__(self, cfg, df: pd.DataFrame, tokenizer, train: bool):
         self.cfg = cfg
         self.tokenizer = tokenizer
         self.train = train
@@ -48,7 +47,6 @@ class TextDataset(Dataset):
         prompt_title = self.prompt_title[index]
         prompt_text = self.prompt_text[index]
         prompt_question = self.prompt_question[index]
-        self.labels[index]
 
         if self.train:
             text = self.augment_text(text)

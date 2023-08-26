@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from configs.config import Config
 from transformers import AutoConfig, AutoModel
 
 
@@ -21,7 +20,7 @@ class MeanPooling(nn.Module):
 
 
 class CustomModel(nn.Module):
-    def __init__(self, cfg: Config, hf_model_config_path: str = None):
+    def __init__(self, cfg, hf_model_config_path: str = None):
         super().__init__()
         self.cfg = cfg
 
