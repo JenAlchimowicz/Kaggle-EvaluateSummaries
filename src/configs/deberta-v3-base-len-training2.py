@@ -18,9 +18,11 @@ class Config:
     train_batch_size: int = 4
     val_batch_size: int = 4
     eval_every_n_batches: int = 180
-    fc_lr: float = 0.00001
+    fc_lr: float = 0.0002
     entire_model_lr: float = 0.000001
     train_device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    large_sequential: bool = False
+    freeze_layers = 3
 
     log_file_path = "log.txt"
     neptune_project_name = "jenkaggle/kaggle"

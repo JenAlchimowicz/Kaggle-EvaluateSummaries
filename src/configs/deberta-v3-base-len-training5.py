@@ -14,13 +14,15 @@ class Config:
     add_prompt_question: bool = True
     add_prompt_text: bool = False
 
-    epochs: int = 2
+    epochs: int = 3
     train_batch_size: int = 4
     val_batch_size: int = 4
     eval_every_n_batches: int = 180
-    fc_lr: float = 0.00001
-    entire_model_lr: float = 0.000001
+    fc_lr: float = 0.0004
+    entire_model_lr: float = 0.0000005
     train_device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    large_sequential: bool = False
+    fc_dim: int = 512
 
     log_file_path = "log.txt"
     neptune_project_name = "jenkaggle/kaggle"

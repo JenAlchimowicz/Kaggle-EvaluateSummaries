@@ -18,7 +18,8 @@ class Config:
     train_batch_size: int = 16
     val_batch_size: int = 16
     eval_every_n_batches: int = 45
-    lr: float = 0.00001
+    fc_lr: float = 0.00001
+    entire_model_lr: float = 0.000001
     train_device: str = "cuda" if torch.cuda.is_available() else "cpu"
 
     log_file_path = "logs/log.txt"

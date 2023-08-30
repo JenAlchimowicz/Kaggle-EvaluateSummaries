@@ -22,8 +22,10 @@ def main(cfg):
     for fold in range(4):
         accelerator = Accelerator()
         model = CustomModel(cfg)
+        model.freeze_layers()
         tokenizer = AutoTokenizer.from_pretrained(cfg.model_name)
-        optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=cfg.entire_model_lr)
+        # optimizer = torch.optim.Adam(model.parameters(), lr=cfg.entire_model_lr)
         criterion = MCRMSELoss()
 
         train_df = train[train["fold"] != fold]
@@ -41,6 +43,9 @@ def main(cfg):
 
         step = 0
         for epoch in range(cfg.epochs):
+            # if epoch >= 1:
+            #     model.unfreeze_encoder_update_optimizer(optimizer, cfg)
+
             step, train_epoch_results = train_epoch(
                 train_dataloader, optimizer, model, criterion, accelerator, val_dataloader, logger, step, fold, cfg
             )

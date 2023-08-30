@@ -29,6 +29,8 @@ class TextDataset(Dataset):
         self.prompt_text = df["prompt_text"].values
         self.prompt_question = df["prompt_question"].values
         self.labels = df[self.cfg.target_cols].values
+        self.student_ids = df["student_id"].values
+        self.prompt_ids = df["prompt_id"].values
 
     def __len__(self):
         return self.text.shape[0]
@@ -36,10 +38,14 @@ class TextDataset(Dataset):
     def __getitem__(self, index):
         inputs = self.get_transform(index)
         labels = torch.tensor(self.labels[index], dtype=torch.float)
+        student_ids = self.student_ids[index]
+        prompt_ids = self.prompt_ids[idnex]
         return {
             "input_ids": inputs["input_ids"].squeeze(0),
             "attention_mask": inputs["attention_mask"].squeeze(0),
             "labels": labels,
+            "student_ids": student_ids,
+            "prompt_ids": prompt_ids,
         }
 
     def get_transform(self, index):

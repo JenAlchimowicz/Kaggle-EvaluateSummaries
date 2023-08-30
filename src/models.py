@@ -32,11 +32,16 @@ class CustomModel(nn.Module):
             self.encoder = AutoModel.from_pretrained(self.cfg.model_name, config=self.hf_model_config)
 
         self.pool = MeanPooling()
-        self.fc = nn.Sequential(
-          nn.Linear(self.hf_model_config.hidden_size, 2),
-        #   nn.ReLU(),
-        #   nn.Linear(self.cfg.fc_dim, 2),
-        )
+        if self.cfg.large_sequential:
+            self.fc = nn.Sequential(
+              nn.Linear(self.hf_model_config.hidden_size, self.cfg.fc_dim),
+              nn.ReLU(),
+              nn.Linear(self.cfg.fc_dim, 2),
+            )
+        else:
+            self.fc = nn.Sequential(
+                nn.Linear(self.hf_model_config.hidden_size, 2),
+            )
 
     def forward(self, inputs):
         encoder_output = self.encoder(**inputs)
@@ -44,3 +49,18 @@ class CustomModel(nn.Module):
         pool_feature = self.pool(last_hidden_state, inputs["attention_mask"])
         output = self.fc(pool_feature)
         return output
+
+    def freeze_layers(self):
+        named_params = list(self.encoder.named_parameters())
+        named_params = named_params[:self.cfg.freeze_layers]
+        for name, param in named_params:
+            param.requires_grad = False
+
+    def unfreeze_encoder_update_optimizer(self, optimizer):
+        if self.cfg.freeze_layers > 0:
+            for param in self.encoder.parameters():
+                param.requires_grad = True
+
+            optimizer.add_param_group({"params": self.encoder.parameters()})
+            for param_group in optimizer.param_groups:
+                param_group["lr"] = self.cfg.entire_model_lr

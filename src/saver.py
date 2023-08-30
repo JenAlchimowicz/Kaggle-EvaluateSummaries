@@ -50,7 +50,5 @@ def random_string(length):
 
 
 def upload_to_s3(file_path, key, bucket: str = "kaggle-evaluate-summaries"):
-    s3 = boto3.client(
-        "s3",
-    )
+    s3 = boto3.client("s3")
     s3.upload_file(file_path, bucket, key)
