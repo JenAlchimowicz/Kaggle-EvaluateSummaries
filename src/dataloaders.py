@@ -12,6 +12,8 @@ def load_data():
     prompt_id_to_fold = {"814d6b": 0, "ebad26": 1, "3b9047": 2, "39c16e": 3}
     train["fold"] = train["prompt_id"].map(prompt_id_to_fold)
 
+    train = train.reset_index(drop=False).rename(columns={"index": "student_id_mine"})
+
     # summaries_test = pd.read_csv("/content/drive/MyDrive/Kaggle-EvaluateSummaries/summaries_test.csv")
     # prompts_test = pd.read_csv("/content/drive/MyDrive/Kaggle-EvaluateSummaries/prompts_test.csv")
     # sample_submission = pd.read_csv("/content/drive/MyDrive/Kaggle-EvaluateSummaries/sample_submission.csv")
@@ -29,8 +31,7 @@ class TextDataset(Dataset):
         self.prompt_text = df["prompt_text"].values
         self.prompt_question = df["prompt_question"].values
         self.labels = df[self.cfg.target_cols].values
-        self.student_ids = df["student_id"].values
-        self.prompt_ids = df["prompt_id"].values
+        self.student_ids = df["student_id_mine"].values
 
     def __len__(self):
         return self.text.shape[0]
@@ -38,14 +39,12 @@ class TextDataset(Dataset):
     def __getitem__(self, index):
         inputs = self.get_transform(index)
         labels = torch.tensor(self.labels[index], dtype=torch.float)
-        student_ids = self.student_ids[index]
-        prompt_ids = self.prompt_ids[idnex]
+        student_ids = torch.tensor(self.student_ids[index])
         return {
             "input_ids": inputs["input_ids"].squeeze(0),
             "attention_mask": inputs["attention_mask"].squeeze(0),
             "labels": labels,
             "student_ids": student_ids,
-            "prompt_ids": prompt_ids,
         }
 
     def get_transform(self, index):

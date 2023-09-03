@@ -4,7 +4,9 @@ from pathlib import Path
 from typing import Dict
 
 import neptune
+from neptune.types import File
 import numpy as np
+import pandas as pd
 
 
 def configure_logger(
@@ -42,6 +44,8 @@ class Logger:
 
         self.run = neptune.init_run(
             project=self.cfg.neptune_project_name,
+            capture_stdout=False,
+            capture_stderr=False,
         )
         self.run["final_training"] = final_training
 
@@ -75,3 +79,8 @@ class Logger:
         self.run[f"loss/per_step_loss/fold_{fold}/wording_rmse"].append(
             value=losses["wording_rmse"], step=step*self.cfg.train_batch_size,
         )
+
+    def log_error_analysis(self, errors, fold):
+        df = pd.DataFrame(errors, columns=["student_id", "mcrmse", "content", "wording"])
+        df.to_csv(f"tmp/error_analysis_{fold}.csv", index=False)
+        self.run[f"error_analysis/fold_{fold}"].upload(f"tmp/error_analysis_{fold}.csv")

@@ -10,8 +10,10 @@ from logger import Logger
 from loss import MCRMSELoss
 from models import CustomModel
 from torch.utils.data import DataLoader
-from train_functions import train_epoch, val_epoch
+from train_functions import train_epoch, val_epoch, val_epoch_error_analysis
 from transformers import AutoTokenizer, DataCollatorWithPadding
+import credentials
+from optimizer import get_optimizer
 
 
 def main(cfg):
@@ -22,10 +24,9 @@ def main(cfg):
     for fold in range(4):
         accelerator = Accelerator()
         model = CustomModel(cfg)
-        model.freeze_layers()
+        # model.freeze_layers()
         tokenizer = AutoTokenizer.from_pretrained(cfg.model_name)
-        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=cfg.entire_model_lr)
-        # optimizer = torch.optim.Adam(model.parameters(), lr=cfg.entire_model_lr)
+        optimizer = get_optimizer(cfg, model)
         criterion = MCRMSELoss()
 
         train_df = train[train["fold"] != fold]
@@ -35,7 +36,7 @@ def main(cfg):
 
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
         train_dataloader = DataLoader(train_df, shuffle=True, batch_size=cfg.train_batch_size, collate_fn=data_collator)
-        val_dataloader = DataLoader(val_df, shuffle=True, batch_size=cfg.val_batch_size, collate_fn=data_collator)
+        val_dataloader = DataLoader(val_df, shuffle=False, batch_size=cfg.val_batch_size, collate_fn=data_collator)
 
         train_dataloader, val_dataloader, model, optimizer = accelerator.prepare(
             train_dataloader, val_dataloader, model, optimizer,
@@ -53,6 +54,9 @@ def main(cfg):
             logger.update_epoch_metrics(fold, epoch, train_epoch_results, val_epoch_results)
 
         logger.update_fold_metrics()
+
+        top_k_errors = val_epoch_error_analysis(val_dataloader, model, cfg)
+        logger.log_error_analysis(top_k_errors, fold)
 
         del model, train_dataloader, val_dataloader, optimizer, accelerator
         torch.cuda.empty_cache()

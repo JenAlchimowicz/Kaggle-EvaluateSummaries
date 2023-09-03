@@ -14,15 +14,18 @@ def train_epoch(train_dataloader, optimizer, model, criterion, accelerator,
 
     for _i, batch in enumerate(train_dataloader):
         labels = batch["labels"]
-        del batch["labels"], batch["student_ids"], batch["prompt_ids"]
+        del batch["labels"], batch["student_ids"]
 
-        optimizer.zero_grad()
         output = model(batch)
         loss = criterion(output, labels)
+        loss["mcrmse"] = loss["mcrmse"] / cfg.gradient_accumulation_steps
         accelerator.backward(loss["mcrmse"])
-        optimizer.step()
 
-        epoch_mcrmse.append(loss["mcrmse"].item())
+        if (_i + 1) % cfg.gradient_accumulation_steps == 0:
+            optimizer.step()
+            optimizer.zero_grad()
+
+        epoch_mcrmse.append(loss["mcrmse"].item() * cfg.gradient_accumulation_steps)
         epoch_content_rmse.append(loss["content_rmse"])
         epoch_wording_rmse.append(loss["wording_rmse"])
 
@@ -52,7 +55,7 @@ def val_epoch(val_dataloader, model, criterion):
 
     for _i, batch in enumerate(val_dataloader):
         labels = batch["labels"]
-        del batch["labels"], batch["student_ids"], batch["prompt_ids"]
+        del batch["labels"], batch["student_ids"]
 
         output = model(batch)
         loss = criterion(output, labels)
@@ -73,20 +76,25 @@ def val_epoch(val_dataloader, model, criterion):
 
 
 @torch.no_grad()
-def val_epoch_error_analysis(val_dataloader, model, criterion):
+def val_epoch_error_analysis(val_dataloader, model, cfg):
     model.eval()
-    top_10 = []
-    top_10_loss = []
+    all_losses = []
 
     for batch in val_dataloader:
         labels = batch["labels"]
         student_ids = batch["student_ids"]
-        prompt_ids = batch["prompt_ids"]
-        del batch["labels"], batch["student_ids"], batch["prompt_ids"]
+        del batch["labels"], batch["student_ids"]
 
         output = model(batch)
-        loss = criterion(output, labels)["mcrmse"].item()
+        errors = torch.abs(output - labels)
+        per_sample_mcrmse = torch.mean(errors, dim=1)
 
-        # Keep top 10 losses
+        for i in range(student_ids.shape[0]):
+            student_id = student_ids[i].item()
+            mcrmse = per_sample_mcrmse[i].item()
+            content_rmse = errors[i][0].item()
+            wording_rmse = errors[i][1].item()
+            all_losses.append([student_id, mcrmse, content_rmse, wording_rmse])
 
-    return top_10, top_10_loss
+    sorted_losses = sorted(all_losses, key=lambda x: x[1], reverse=True)
+    return sorted_losses[:cfg.log_n_error_samples]

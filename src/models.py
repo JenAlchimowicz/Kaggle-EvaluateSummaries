@@ -54,6 +54,7 @@ class CustomModel(nn.Module):
         named_params = list(self.encoder.named_parameters())
         named_params = named_params[:self.cfg.freeze_layers]
         for name, param in named_params:
+            print(f"Param frozen: {name}")
             param.requires_grad = False
 
     def unfreeze_encoder_update_optimizer(self, optimizer):
