@@ -4,7 +4,6 @@ import importlib
 
 import torch
 from accelerate import Accelerator
-from configs.config import Config
 from dataloaders import TextDataset, load_data
 from logger import Logger
 from loss import MCRMSELoss

@@ -62,6 +62,7 @@ class TextDataset(Dataset):
             tokenizer_input,
             padding=False,
             truncation=True,
+            max_length=4096,
             return_tensors="pt",
         )
         return tokenized
@@ -73,12 +74,15 @@ class TextDataset(Dataset):
         sep = self.tokenizer.sep_token
         final_text = ""
         if self.cfg.add_prompt_title:
-            final_text += f"TITLE: {prompt_title} {sep} \n"
+            final_text += f"TITLE: {prompt_title} {sep} \n\n"
         if self.cfg.add_prompt_question:
-            final_text += f"QUESTION: {prompt_question} {sep} \n"
-        if self.cfg.add_prompt_text:
-            final_text += f"CONTEXT: {prompt_text} {sep} \n"
+            final_text += f"QUESTION: {prompt_question} {sep} \n\n"
 
         final_text += f"ANSWER: {text}"
+
+        if self.cfg.add_prompt_text:
+            final_text += f"{sep} \n\nCONTEXT: {prompt_text} {sep} \n\n"
+
+
         return final_text
 

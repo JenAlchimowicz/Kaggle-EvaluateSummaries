@@ -92,9 +92,11 @@ def val_epoch_error_analysis(val_dataloader, model, cfg):
         for i in range(student_ids.shape[0]):
             student_id = student_ids[i].item()
             mcrmse = per_sample_mcrmse[i].item()
-            content_rmse = errors[i][0].item()
-            wording_rmse = errors[i][1].item()
-            all_losses.append([student_id, mcrmse, content_rmse, wording_rmse])
+            content_label = labels[i][0].item()
+            content_pred = output[i][0].item()
+            wording_label = labels[i][1].item()
+            wording_pred = output[i][1].item()
+            all_losses.append([student_id, mcrmse, content_label, content_pred, wording_label, wording_pred])
 
     sorted_losses = sorted(all_losses, key=lambda x: x[1], reverse=True)
     return sorted_losses[:cfg.log_n_error_samples]

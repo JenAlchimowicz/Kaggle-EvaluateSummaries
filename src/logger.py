@@ -81,6 +81,6 @@ class Logger:
         )
 
     def log_error_analysis(self, errors, fold):
-        df = pd.DataFrame(errors, columns=["student_id", "mcrmse", "content", "wording"])
+        df = pd.DataFrame(errors, columns=["student_id", "mcrmse", "content_label", "content_pred", "wording_label", "wording_pred"])
         df.to_csv(f"tmp/error_analysis_{fold}.csv", index=False)
         self.run[f"error_analysis/fold_{fold}"].upload(f"tmp/error_analysis_{fold}.csv")
